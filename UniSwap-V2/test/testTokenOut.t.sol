@@ -5,17 +5,12 @@ import {Test, console} from "forge-std/Test.sol";
 
 import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import {IERC20} from "@uniswap/v2-core/contracts/interfaces/IERC20.sol";
-import {
-    IUniswapV2Router02
-} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import {IUniswapV2Router02} from "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {Constants} from "../src/Constants.sol";
 import {ERC20} from "../src/ERC20.sol";
-import {
-    IUniswapV2Pair
-} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import {
-    IUniswapV2Factory
-} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import {IUniswapV2Pair} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+
 contract uniSwapv2 is Test {
     IWETH private weth;
     IERC20 private dai;
@@ -28,13 +23,14 @@ contract uniSwapv2 is Test {
         mkr = IERC20(Constants.MKR);
         router = IUniswapV2Router02(Constants.UNISWAP_V2_ROUTER_02);
     }
+
     function test_getAmountOut() public view {
         address[] memory path = new address[](3);
         path[0] = address(weth);
         path[1] = address(dai);
         path[2] = address(mkr);
-        uint amountIn = 1e18; // 1 WETH
-        uint[] memory amountsOut = router.getAmountsOut(amountIn, path);
+        uint256 amountIn = 1e18; // 1 WETH
+        uint256[] memory amountsOut = router.getAmountsOut(amountIn, path);
         console.log("Amount of weth inned", amountsOut[0]);
         console.log("Amount of dai", amountsOut[1]);
         console.log("Amount of mkr", amountsOut[2]);
@@ -50,7 +46,7 @@ contract uniSwapv2 is Test {
         path[1] = address(dai);
         path[2] = address(mkr);
         uint256 amountOut = 1e16; // 1e18 will cause an error: `[Revert] ds-math-sub-underflow`
-        uint[] memory amountsIn = router.getAmountsIn(amountOut, path);
+        uint256[] memory amountsIn = router.getAmountsIn(amountOut, path);
         console.log("Amount of weth needed", amountsIn[0]);
         console.log("Amount of dai needed", amountsIn[1]);
         console.log("Amount of mkr out", amountsIn[2]);
@@ -67,17 +63,13 @@ contract uniSwapv2 is Test {
         path[0] = address(weth);
         path[1] = address(dai);
         path[2] = address(mkr);
-        uint amountIn = 1e18; // 1 WETH
-        uint amountOutMin = 1e15; // 0.001 MKR
+        uint256 amountIn = 1e18; // 1 WETH
+        uint256 amountOutMin = 1e15; // 0.001 MKR
         vm.startPrank(user);
         weth.deposit{value: amountIn}();
         weth.approve(address(router), amountIn);
-        uint[] memory amounts = router.swapExactTokensForTokens({
-            amountIn: amountIn,
-            amountOutMin: amountOutMin,
-            path: path,
-            to: user,
-            deadline: block.timestamp + 1000
+        uint256[] memory amounts = router.swapExactTokensForTokens({
+            amountIn: amountIn, amountOutMin: amountOutMin, path: path, to: user, deadline: block.timestamp + 1000
         });
         vm.stopPrank();
         console.log("Amount of weth spent", amounts[0]);
@@ -89,6 +81,7 @@ contract uniSwapv2 is Test {
         // Amount of dai bought 3089528293800335233768
         // Amount of mkr bought 46555118693399564
     }
+
     function test_swapTokensForExactTokens() public {
         address user = address(1);
         vm.deal(user, 10e18); // give user 10 WETH
@@ -96,18 +89,14 @@ contract uniSwapv2 is Test {
         path[0] = address(weth);
         path[1] = address(dai);
         path[2] = address(mkr);
-        uint amountOut = 1e16; // 0.01 MKR
-        uint amountInMax = 1e18; // 1 WETH
+        uint256 amountOut = 1e16; // 0.01 MKR
+        uint256 amountInMax = 1e18; // 1 WETH
 
         vm.startPrank(user);
         weth.deposit{value: amountInMax}();
         weth.approve(address(router), amountInMax);
-        uint[] memory amounts = router.swapTokensForExactTokens({
-            amountOut: amountOut,
-            amountInMax: amountInMax,
-            path: path,
-            to: user,
-            deadline: block.timestamp + 1000
+        uint256[] memory amounts = router.swapTokensForExactTokens({
+            amountOut: amountOut, amountInMax: amountInMax, path: path, to: user, deadline: block.timestamp + 1000
         });
         vm.stopPrank();
         console.log("Amount of weth spent", amounts[0]);
@@ -119,13 +108,11 @@ contract uniSwapv2 is Test {
         // Amount of dai bought 18001497796751046760
         // Amount of mkr bought 10000000000000000
     }
+
     function test_createPair() public {
         address factory = Constants.UNISWAP_V2_FACTORY;
         ERC20 tokenA = new ERC20("TokenA", "TKA", 18);
-        address pair = IUniswapV2Factory(factory).createPair(
-            address(tokenA),
-            address(weth)
-        );
+        address pair = IUniswapV2Factory(factory).createPair(address(tokenA), address(weth));
         console.log("New pair address:", pair);
         address token0 = IUniswapV2Pair(pair).token0();
         address token1 = IUniswapV2Pair(pair).token1();
@@ -153,7 +140,7 @@ contract uniSwapv2 is Test {
         weth.deposit{value: 5e18}(); // deposit 5 WETH
         weth.approve(address(router), 5e18);
         dai.approve(address(router), 10000e18); // approve 10000 DAI
-        (uint amountA, uint amountB, uint liquidity) = router.addLiquidity({
+        (uint256 amountA, uint256 amountB, uint256 liquidity) = router.addLiquidity({
             tokenA: address(weth),
             tokenB: address(dai),
             amountADesired: 5e17,
@@ -165,25 +152,18 @@ contract uniSwapv2 is Test {
         });
         vm.stopPrank();
 
-        address pair = IUniswapV2Factory(Constants.UNISWAP_V2_FACTORY).getPair(
-            address(weth),
-            address(dai)
-        );
+        address pair = IUniswapV2Factory(Constants.UNISWAP_V2_FACTORY).getPair(address(weth), address(dai));
 
         console.log("Amount of WETH added:", amountA);
         console.log("Amount of DAI added:", amountB);
         console.log("Liquidity tokens received:", liquidity);
-        assertEq(
-            liquidity,
-            IUniswapV2Pair(pair).balanceOf(user),
-            "Liquidity tokens not received correctly"
-        );
+        assertEq(liquidity, IUniswapV2Pair(pair).balanceOf(user), "Liquidity tokens not received correctly");
 
         //       Amount of WETH added: 500000000000000000  -> 5e17
         // Amount of DAI added: 1574.251519945248793173     -> 1574.251519945248793173  dai
         // Liquidity tokens received: 12.985837463326597943
 
-        (uint reserve0, uint reserve1, ) = IUniswapV2Pair(pair).getReserves();
+        (uint256 reserve0, uint256 reserve1,) = IUniswapV2Pair(pair).getReserves();
         if (address(weth) < address(dai)) {
             console.log("Reserve WETH:", reserve0);
             console.log("Reserve DAI:", reserve1);
@@ -210,15 +190,11 @@ contract uniSwapv2 is Test {
         vm.stopPrank();
 
         // get reserves before adding liquidity
-        address pair = IUniswapV2Factory(Constants.UNISWAP_V2_FACTORY).getPair(
-            address(weth),
-            address(dai)
-        );
-        (uint reserve0Before, uint reserve1Before, ) = IUniswapV2Pair(pair)
-            .getReserves();
+        address pair = IUniswapV2Factory(Constants.UNISWAP_V2_FACTORY).getPair(address(weth), address(dai));
+        (uint256 reserve0Before, uint256 reserve1Before,) = IUniswapV2Pair(pair).getReserves();
 
-        uint reserveA;
-        uint reserveB;
+        uint256 reserveA;
+        uint256 reserveB;
 
         if (address(weth) < address(dai)) {
             reserveA = reserve0Before;
@@ -235,7 +211,7 @@ contract uniSwapv2 is Test {
         // add liquidity without distortion
         {
             vm.startPrank(user);
-            (uint amountA, uint amountB, uint liquidity) = router.addLiquidity({
+            (uint256 amountA, uint256 amountB, uint256 liquidity) = router.addLiquidity({
                 tokenA: address(weth),
                 tokenB: address(dai),
                 amountADesired: 5e17,
@@ -253,10 +229,9 @@ contract uniSwapv2 is Test {
         }
 
         {
-            (uint reserve0After, uint reserve1After, ) = IUniswapV2Pair(pair)
-                .getReserves();
-            uint reserveAAfter;
-            uint reserveBAfter;
+            (uint256 reserve0After, uint256 reserve1After,) = IUniswapV2Pair(pair).getReserves();
+            uint256 reserveAAfter;
+            uint256 reserveBAfter;
 
             if (address(weth) < address(dai)) {
                 reserveAAfter = reserve0After;
@@ -268,10 +243,7 @@ contract uniSwapv2 is Test {
 
             console.log(" total weth after adding liquidity", reserveAAfter);
             console.log(" total dai after adding liquidity", reserveBAfter);
-            console.log(
-                "---- ratio  without distortion and adding liquidity ----",
-                reserveBAfter / reserveAAfter
-            );
+            console.log("---- ratio  without distortion and adding liquidity ----", reserveBAfter / reserveAAfter);
         }
 
         //  total weth before adding anything 2028.937812072234334060
@@ -299,7 +271,7 @@ contract uniSwapv2 is Test {
         // direct transfer to pair contract to distort the ratio
         weth.transfer(pair, 100e18); // distorting the ratio by transferring 100 WETH directly to pair contract
 
-        (uint amountA, uint amountB, uint liquidity2) = router.addLiquidity({
+        (uint256 amountA, uint256 amountB, uint256 liquidity2) = router.addLiquidity({
             tokenA: address(weth),
             tokenB: address(dai),
             amountADesired: 5e17,
@@ -315,10 +287,9 @@ contract uniSwapv2 is Test {
         console.log("Amount of DAI added after distortion:", amountB);
         console.log("Liquidity tokens received :", liquidity2);
 
-        (uint reserve0Final, uint reserve1Final, ) = IUniswapV2Pair(pair)
-            .getReserves();
-        uint reserveAFinal;
-        uint reserveBFinal;
+        (uint256 reserve0Final, uint256 reserve1Final,) = IUniswapV2Pair(pair).getReserves();
+        uint256 reserveAFinal;
+        uint256 reserveBFinal;
 
         if (address(weth) < address(dai)) {
             reserveAFinal = reserve0Final;
@@ -328,18 +299,9 @@ contract uniSwapv2 is Test {
             reserveBFinal = reserve0Final;
         }
 
-        console.log(
-            " total weth after distortion and adding liquidity",
-            reserveAFinal
-        );
-        console.log(
-            " total dai after distortion and adding liquidity",
-            reserveBFinal
-        );
-        console.log(
-            "---- ratio  with distortion and adding liquidity ----",
-            reserveBFinal / reserveAFinal
-        );
+        console.log(" total weth after distortion and adding liquidity", reserveAFinal);
+        console.log(" total dai after distortion and adding liquidity", reserveBFinal);
+        console.log("---- ratio  with distortion and adding liquidity ----", reserveBFinal / reserveAFinal);
     }
 
     function test_removeLiquidity() public {
@@ -350,7 +312,7 @@ contract uniSwapv2 is Test {
         weth.deposit{value: 5e18}(); // deposit 5 WETH
         weth.approve(address(router), 5e18);
         dai.approve(address(router), 10000e18); // approve 10000 DAI
-        (uint amount0, uint amount1, uint liquidity) = router.addLiquidity({
+        (uint256 amount0, uint256 amount1, uint256 liquidity) = router.addLiquidity({
             tokenA: address(weth),
             tokenB: address(dai),
             amountADesired: 5e17,
@@ -361,19 +323,15 @@ contract uniSwapv2 is Test {
             deadline: block.timestamp + 1000
         });
 
-        IUniswapV2Pair pair = IUniswapV2Pair(
-            IUniswapV2Factory(Constants.UNISWAP_V2_FACTORY).getPair(
-                address(weth),
-                address(dai)
-            )
-        );
+        IUniswapV2Pair pair =
+            IUniswapV2Pair(IUniswapV2Factory(Constants.UNISWAP_V2_FACTORY).getPair(address(weth), address(dai)));
 
         console.log(" weth token added ", amount0);
         console.log(" dai token added ", amount1);
         console.log("Liquidity tokens of users :", pair.balanceOf(user));
 
         pair.approve(address(router), liquidity);
-        (uint amountA, uint amountB) = router.removeLiquidity({
+        (uint256 amountA, uint256 amountB) = router.removeLiquidity({
             tokenA: address(weth),
             tokenB: address(dai),
             liquidity: liquidity,
@@ -387,9 +345,6 @@ contract uniSwapv2 is Test {
         console.log("Amount of WETH removed:", amountA);
         console.log("Amount of DAI removed:", amountB);
 
-        console.log(
-            "Liquidity tokens of users after removal:",
-            pair.balanceOf(user)
-        );
+        console.log("Liquidity tokens of users after removal:", pair.balanceOf(user));
     }
 }
