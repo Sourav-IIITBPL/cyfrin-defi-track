@@ -12,5 +12,9 @@ library Constants {
     address internal constant UNISWAP_V2_ROUTER_02 = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
     address public constant UNISWAP_V2_FACTORY = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+
+    address internal constant SUSHISWAP_V2_ROUTER_02 = 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+
+    address internal constant HOPR = 0xF5581dFeFD8Fb0e4aeC526bE659CFaB1f8c781dA;
 }
 
